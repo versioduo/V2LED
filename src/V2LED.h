@@ -3,7 +3,10 @@
 
 #pragma once
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
 #include <SPI.h>
+#pragma GCC diagnostic pop
 
 class V2LED {
 public:
