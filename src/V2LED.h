@@ -97,6 +97,9 @@ public:
   // visible at the same time across all LEDs, seconds is duration for one LED
   // to rotate through one cycle of the colors.
   void rainbow(uint8_t cycles = 1, float seconds = 1, float brightness = 1, bool reverse = false);
+  bool isRainbow() {
+    return _rainbow.cycle_steps > 0;
+  }
 
 private:
   const uint16_t _n_leds_max{};
