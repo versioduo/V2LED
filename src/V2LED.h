@@ -67,14 +67,26 @@ public:
   void setMaxBrightness(float fraction);
 
   // Set white color brightness for one or all LEDs.
-  void setBrightness(uint16_t index, float v);
+  void setBrightness(uint16_t index, float v) {
+    if (isRainbow())
+      return;
+
+    setLED(index, 0, 0, v);
+  }
+
   void setBrightness(float v) {
     for (uint16_t i = 0; i < _leds.count; i++)
       setBrightness(i, v);
   }
 
   // Set HSV color for one or all LEDs.
-  void setHSV(uint16_t index, float h, float s, float v);
+  void setHSV(uint16_t index, float h, float s, float v) {
+    if (isRainbow())
+      return;
+
+    setLED(index, h, s, v);
+  }
+
   void setHSV(float h, float s, float v) {
     for (uint16_t i = 0; i < _leds.count; i++)
       setHSV(i, h, s, v);
@@ -128,13 +140,13 @@ private:
     uint8_t r;
     uint8_t g;
     uint8_t b;
-  } *_pixel_rgb{};
+  } * _pixel_rgb{};
 
   struct PixelDMA {
     uint8_t g[3];
     uint8_t r[3];
     uint8_t b[3];
-  } *_pixel_dma{};
+  } * _pixel_dma{};
 
   struct {
     PixelRGB pixel;

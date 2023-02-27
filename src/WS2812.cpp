@@ -59,7 +59,8 @@ void V2LED::WS2812::loop() {
 
     int16_t color = _rainbow.color;
     for (uint16_t i = 0; i < _leds.count; i++) {
-      setHSV(i, color, 1, _rainbow.brightness);
+      setLED(i, color, 1, _rainbow.brightness);
+
       if (_rainbow.reverse) {
         color += _rainbow.cycle_steps;
         if (color > 359)
@@ -126,7 +127,8 @@ static void convertWS2812(float h, float s, float v, uint8_t *rp, uint8_t *gp, u
 }
 
 void V2LED::WS2812::setLED(uint16_t index, float h, float s, float v) {
-  convertWS2812(h, s, v, &_pixel_rgb[index].r, &_pixel_rgb[index].g, &_pixel_rgb[index].b);
+  convertWS2812(h, s, v * _leds.max_brightness, &_pixel_rgb[index].r, &_pixel_rgb[index].g, &_pixel_rgb[index].b);
+  _dma.update = true;
 }
 
 static void encodeByteFrame(uint8_t b, uint8_t f[3]) {
@@ -176,17 +178,10 @@ void V2LED::WS2812::setMaxBrightness(float fraction) {
   _dma.update          = true;
 }
 
-void V2LED::WS2812::setBrightness(uint16_t index, float v) {
-  setLED(index, 0, 0, v * _leds.max_brightness);
-  _dma.update = true;
-}
-
-void V2LED::WS2812::setHSV(uint16_t index, float h, float s, float v) {
-  setLED(index, h, s, v * _leds.max_brightness);
-  _dma.update = true;
-}
-
 void V2LED::WS2812::setRGB(uint16_t index, uint8_t r, uint8_t g, uint8_t b) {
+  if (isRainbow())
+    return;
+
   _pixel_rgb[index].r = r;
   _pixel_rgb[index].g = g;
   _pixel_rgb[index].b = b;
