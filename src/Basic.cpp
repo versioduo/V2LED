@@ -33,19 +33,19 @@ void V2LED::Basic::setBrightness(float fraction) {
 }
 
 void V2LED::Basic::flash(float seconds, float brightness) {
-  _flash.start_usec    = micros();
-  _flash.duration_usec = seconds * 1000.f * 1000.f;
+  _flash.startUsec    = micros();
+  _flash.durationUsec = seconds * 1000.f * 1000.f;
   setBrightness(brightness);
 }
 
 void V2LED::Basic::loop() {
-  if (_flash.duration_usec == 0)
+  if (_flash.durationUsec == 0)
     return;
 
-  if ((unsigned long)(micros() - _flash.start_usec) < _flash.duration_usec)
+  if ((unsigned long)(micros() - _flash.startUsec) < _flash.durationUsec)
     return;
 
-  _flash.duration_usec = 0;
+  _flash.durationUsec = 0;
   setBrightness(0);
 }
 

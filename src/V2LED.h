@@ -23,20 +23,20 @@ private:
   V2Base::Timer::Periodic *_timer;
 
   struct {
-    unsigned long start_usec{};
-    unsigned long duration_usec{};
+    unsigned long startUsec{};
+    unsigned long durationUsec{};
   } _flash{};
 };
 
 // Daisy-chained intelligent RGB-LEDs.
 class WS2812 {
 public:
-  constexpr WS2812(uint16_t n_leds, SPIClass *spi) : _n_leds_max(n_leds), _spi{spi} {}
+  constexpr WS2812(uint16_t nLEDs, SPIClass *spi) : _nLEDsMax(nLEDs), _spi{spi} {}
 
   // Build SPI bus from SERCOM.
-  constexpr WS2812(uint16_t n_leds, uint8_t pin, SERCOM *sercom, SercomSpiTXPad pad_tx, EPioType pin_func) :
-    _n_leds_max(n_leds),
-    _sercom{.pin{pin}, .sercom{sercom}, .pad_tx{pad_tx}, .pin_func{pin_func}} {}
+  constexpr WS2812(uint16_t nLEDs, uint8_t pin, SERCOM *sercom, SercomSpiTXPad padTX, EPioType pinFunc) :
+    _nLEDsMax(nLEDs),
+    _sercom{.pin{pin}, .sercom{sercom}, .padTX{padTX}, .pinFunc{pinFunc}} {}
 
   void begin();
   void reset();
@@ -110,29 +110,29 @@ public:
   // to rotate through one cycle of the colors.
   void rainbow(uint8_t cycles = 1, float seconds = 1, float brightness = 1, bool reverse = false);
   bool isRainbow() {
-    return _rainbow.cycle_steps > 0;
+    return _rainbow.cycleSteps > 0;
   }
 
 private:
-  const uint16_t _n_leds_max{};
+  const uint16_t _nLEDsMax{};
   struct {
     uint16_t count{};
     bool reverse{};
-    float max_brightness{1};
+    float maxBrightness{1};
   } _leds;
 
   struct {
     const uint8_t pin;
     SERCOM *sercom;
-    const SercomSpiTXPad pad_tx;
-    const EPioType pin_func;
+    const SercomSpiTXPad padTX;
+    const EPioType pinFunc;
   } _sercom{};
 
   SPIClass *_spi{};
 
   struct {
     uint8_t *buffer{};
-    uint16_t buffer_size{};
+    uint16_t bufferSize{};
     bool update{};
   } _dma;
 
@@ -140,29 +140,29 @@ private:
     uint8_t r;
     uint8_t g;
     uint8_t b;
-  } * _pixel_rgb{};
+  } * _pixelRGB{};
 
   struct PixelDMA {
     uint8_t g[3];
     uint8_t r[3];
     uint8_t b[3];
-  } * _pixel_dma{};
+  } * _pixelDMA{};
 
   struct {
     PixelRGB pixel;
     uint16_t count;
-    unsigned long start_usec;
-    unsigned long duration_usec;
+    unsigned long startUsec;
+    unsigned long durationUsec;
   } _splash{};
 
   struct {
-    uint8_t cycle_steps;
-    uint8_t move_steps;
+    uint8_t cycleSteps;
+    uint8_t moveSteps;
     float brightness;
     bool reverse;
     uint16_t color;
-    unsigned long update_usec;
-    unsigned long last_usec;
+    unsigned long updateUsec;
+    unsigned long lastUsec;
   } _rainbow{};
 
   void setLED(uint16_t index, float h, float s, float v);

@@ -8,14 +8,14 @@
 void V2LED::WS2812::begin() {
   // Lead-in of ~300 usec to settle the signal at logic low + pixel data + ~300
   // usec latch 2.4 MBit SPI clock / 8 == 300 kByte/s == 3.33 usec / Byte.
-  _dma.buffer_size = 90 + (sizeof(struct PixelDMA) * _n_leds_max) + 90;
-  _dma.buffer      = (uint8_t *)calloc(_dma.buffer_size, 1);
+  _dma.bufferSize = 90 + (sizeof(struct PixelDMA) * _nLEDsMax) + 90;
+  _dma.buffer     = (uint8_t *)calloc(_dma.bufferSize, 1);
 
   // Pointer to start of encoded pixel data.
-  _pixel_dma = (struct PixelDMA *)(_dma.buffer + 90);
+  _pixelDMA = (struct PixelDMA *)(_dma.buffer + 90);
 
   // RGB buffer to draw DMA pixel data from.
-  _pixel_rgb = (struct PixelRGB *)calloc(sizeof(struct PixelRGB), _n_leds_max);
+  _pixelRGB = (struct PixelRGB *)calloc(sizeof(struct PixelRGB), _nLEDsMax);
 
   // Build SPI bus from SERCOM.
   //
@@ -24,16 +24,16 @@ void V2LED::WS2812::begin() {
   // we do not touch anything else. Our pin will be switched to the SERCOM after
   // begin().
   if (!_spi)
-    _spi = new SPIClass(_sercom.sercom, _sercom.pin, _sercom.pin, _sercom.pin, _sercom.pad_tx, SERCOM_RX_PAD_3);
+    _spi = new SPIClass(_sercom.sercom, _sercom.pin, _sercom.pin, _sercom.pin, _sercom.padTX, SERCOM_RX_PAD_3);
 
   if (_sercom.sercom)
-    pinPeripheral(_sercom.pin, _sercom.pin_func);
+    pinPeripheral(_sercom.pin, _sercom.pinFunc);
 
   // Configure SPI, the transaction will never stop.
   _spi->begin();
   _spi->beginTransaction(SPISettings(2400000, MSBFIRST, SPI_MODE0));
 
-  _leds.count = _n_leds_max;
+  _leds.count = _nLEDsMax;
   reset();
 }
 
@@ -48,32 +48,32 @@ void V2LED::WS2812::reset() {
 
 void V2LED::WS2812::loop() {
   // Remove timed splash.
-  if (_splash.start_usec > 0 && (unsigned long)(micros() - _splash.start_usec) > _splash.duration_usec) {
-    _dma.update        = true;
-    _splash.start_usec = 0;
+  if (_splash.startUsec > 0 && (unsigned long)(micros() - _splash.startUsec) > _splash.durationUsec) {
+    _dma.update       = true;
+    _splash.startUsec = 0;
   }
 
   // Draw rainbow.
-  if (_rainbow.cycle_steps > 0 && (unsigned long)(micros() - _rainbow.last_usec) > 25 * 1000) {
-    _rainbow.last_usec = micros();
+  if (_rainbow.cycleSteps > 0 && (unsigned long)(micros() - _rainbow.lastUsec) > 25 * 1000) {
+    _rainbow.lastUsec = micros();
 
     int16_t color = _rainbow.color;
     for (uint16_t i = 0; i < _leds.count; i++) {
       setLED(i, color, 1, _rainbow.brightness);
 
       if (_rainbow.reverse) {
-        color += _rainbow.cycle_steps;
+        color += _rainbow.cycleSteps;
         if (color > 359)
           color -= 360;
 
       } else {
-        color -= _rainbow.cycle_steps;
+        color -= _rainbow.cycleSteps;
         if (color < 0)
           color += 360;
       }
     }
 
-    _rainbow.color += _rainbow.move_steps;
+    _rainbow.color += _rainbow.moveSteps;
     if (_rainbow.color > 359)
       _rainbow.color -= 360;
   }
@@ -85,25 +85,25 @@ void V2LED::WS2812::loop() {
     return;
 
   // Draw splash overlay.
-  if (_splash.start_usec > 0) {
+  if (_splash.startUsec > 0) {
     PixelRGB pixel{};
 
     for (uint16_t i = 0; i < _leds.count; i++) {
-      PixelDMA *pixel_dma = _leds.reverse ? &_pixel_dma[_leds.count - 1 - i] : &_pixel_dma[i];
+      PixelDMA *pixelDMA = _leds.reverse ? &_pixelDMA[_leds.count - 1 - i] : &_pixelDMA[i];
       if (i < _splash.count)
-        encodePixel(&_splash.pixel, pixel_dma);
+        encodePixel(&_splash.pixel, pixelDMA);
 
       else
-        encodePixel(&pixel, &_pixel_dma[i]);
+        encodePixel(&pixel, &_pixelDMA[i]);
     }
   } else {
     for (uint16_t i = 0; i < _leds.count; i++) {
-      PixelDMA *pixel_dma = _leds.reverse ? &_pixel_dma[_leds.count - 1 - i] : &_pixel_dma[i];
-      encodePixel(&_pixel_rgb[i], pixel_dma);
+      PixelDMA *pixelDMA = _leds.reverse ? &_pixelDMA[_leds.count - 1 - i] : &_pixelDMA[i];
+      encodePixel(&_pixelRGB[i], pixelDMA);
     }
   }
 
-  _spi->transfer(_dma.buffer, NULL, _dma.buffer_size, false);
+  _spi->transfer(_dma.buffer, NULL, _dma.bufferSize, false);
   _dma.update = false;
 }
 
@@ -127,7 +127,7 @@ static void convertWS2812(float h, float s, float v, uint8_t *rp, uint8_t *gp, u
 }
 
 void V2LED::WS2812::setLED(uint16_t index, float h, float s, float v) {
-  convertWS2812(h, s, v * _leds.max_brightness, &_pixel_rgb[index].r, &_pixel_rgb[index].g, &_pixel_rgb[index].b);
+  convertWS2812(h, s, v * _leds.maxBrightness, &_pixelRGB[index].r, &_pixelRGB[index].g, &_pixelRGB[index].b);
   _dma.update = true;
 }
 
@@ -174,31 +174,31 @@ void V2LED::WS2812::encodePixel(const struct PixelRGB *rgb, struct PixelDMA *dma
 }
 
 void V2LED::WS2812::setMaxBrightness(float fraction) {
-  _leds.max_brightness = fraction;
-  _dma.update          = true;
+  _leds.maxBrightness = fraction;
+  _dma.update         = true;
 }
 
 void V2LED::WS2812::setRGB(uint16_t index, uint8_t r, uint8_t g, uint8_t b) {
   if (isRainbow())
     return;
 
-  _pixel_rgb[index].r = r;
-  _pixel_rgb[index].g = g;
-  _pixel_rgb[index].b = b;
-  _dma.update         = true;
+  _pixelRGB[index].r = (float)r * _leds.maxBrightness;
+  _pixelRGB[index].g = (float)g * _leds.maxBrightness;
+  _pixelRGB[index].b = (float)b * _leds.maxBrightness;
+  _dma.update        = true;
 }
 
 void V2LED::WS2812::splashHSV(float seconds, uint16_t count, float h, float s, float v) {
   convertWS2812(h, s, v, &_splash.pixel.r, &_splash.pixel.g, &_splash.pixel.b);
-  _splash.count         = count;
-  _splash.duration_usec = seconds * 1000 * 1000;
-  _splash.start_usec    = micros();
-  _dma.update           = true;
+  _splash.count        = count;
+  _splash.durationUsec = seconds * 1000 * 1000;
+  _splash.startUsec    = micros();
+  _dma.update          = true;
 }
 
 void V2LED::WS2812::rainbow(uint8_t cycles, float seconds, float brightness, bool reverse) {
-  _rainbow.cycle_steps = (360 / _leds.count) * cycles;
-  _rainbow.move_steps  = (360.f / 40.f) / seconds;
-  _rainbow.brightness  = brightness;
-  _rainbow.reverse     = reverse;
+  _rainbow.cycleSteps = (360 / _leds.count) * cycles;
+  _rainbow.moveSteps  = (360.f / 40.f) / seconds;
+  _rainbow.brightness = brightness;
+  _rainbow.reverse    = reverse;
 }
